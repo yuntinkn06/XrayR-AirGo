@@ -1,9 +1,9 @@
 name: Publish Docker image
 on:
   workflow_dispatch:
-
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -12,9 +12,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: Get branch name
+        id: get_branch
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          echo "BRANCH=${BRANCH}" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -37,7 +39,7 @@ jobs:
           platforms: linux/arm,linux/arm64,linux/amd64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/xrayr:${{ steps.get_version.outputs.VERSION }}
+            ghcr.io/${{ github.repository_owner }}/xrayr:${{ env.BRANCH }}
             ghcr.io/${{ github.repository_owner }}/xrayr:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
